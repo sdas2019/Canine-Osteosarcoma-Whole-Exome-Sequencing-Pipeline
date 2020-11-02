@@ -1,0 +1,38 @@
+#!/bin/bash
+#SBATCH -J fmcfname.code
+#SBATCH -p shas        
+#SBATCH --qos Normal
+#SBATCH -t 6:00:00
+#SBATCH -N 1
+#SBATCH --mem=40000
+#SBATCH --output=fname.codeFMC.out
+
+module load jdk
+#2019.02.20
+#Filtering and annotating mutect2 varaints 
+
+#Step 1 - Filtering the mutect Calls
+gatk FilterMutectCalls -V ../Mutect2/fname.code_somatic_m2-GR.vcf.gz \
+-O ../Mutect2/intermediary/fname.code_somatic_m2_GR_FMC.vcf.gz
+
+#Step2 - Filtering by orientation bias
+
+gatk FilterByOrientationBias \
+-AM G/T \
+-AM C/T \
+-V ../Mutect2/intermediary/fname.code_somatic_m2_GR_FMC.vcf.gz \
+-P ../Metrics/SeqArtifact/fname.code.pre_adapter_detail_metrics.txt \
+-O ../Mutect2/intermediary/fname.code_somatic_m2-GR_FMC_OxoGfiltered.vcf.gz
+
+#Step3 - Extracting only the PASS ones
+zcat  ../Mutect2/intermediary/fname.code_somatic_m2-GR_FMC_OxoGfiltered.vcf.gz \
+| grep "#" > ../Mutect2/intermediary/fname.code_somatic_m2-GR_FMC_OxoGfiltered-a.vcf
+
+zcat ../Mutect2/intermediary/fname.code_somatic_m2-GR_FMC_OxoGfiltered.vcf.gz \
+| grep -v "#" | awk '$7=="PASS"' > ../Mutect2/intermediary/fname.code_somatic_m2-GR_FMC_OxoGfiltered-b.vcf
+
+cat ../Mutect2/intermediary/fname.code_somatic_m2-GR_FMC_OxoGfiltered-*.vcf > \
+../Mutect2/PassOnly/fname.code_somatic_m2-GR_FMC_OxoGfiltered_PASSonly.vcf
+
+rm ../Mutect2/intermediary/fname.code_somatic_m2-GR_FMC_OxoGfiltered-*.vcf
+

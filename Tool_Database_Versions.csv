@@ -1,0 +1,15 @@
+Tools ,Version
+FASTQC,0.11.5
+Trimmomatic,0.36
+BWA,0.7.15
+samtools,1.4.1
+Picard-tools,1.119
+Genome Analysis ToolKit (gatk),4.1.2.0
+Freebayes,1.1.0-3-g961e5f3
+VCFtools,0.1.13
+R,3.6.1
+ComplexHeatmap,1.17.1
+Sequenza,2.1.9999b1
+GISTIC,2.0.23
+Ensembl database,99
+COSMIC database,91

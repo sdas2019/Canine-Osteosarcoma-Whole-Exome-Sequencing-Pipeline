@@ -1,0 +1,88 @@
+#!/bin/bash
+#SBATCH -J SM.fname.code
+#SBATCH -p shas
+#SBATCH --qos Normal
+#SBATCH -t 10:00:00
+#SBATCH -N 1
+#SBATCH --mem=40000
+#SBATCH --output=fname.code_Metrics.out
+
+
+module load jdk
+module load R
+
+#Metrics for Osteosarcoma
+#1_Collect artifacts using gatk
+gatk --java-options "-Xmx38g" CollectSequencingArtifactMetrics \
+	-I ../BAM/fname.code_recal_reads.bam \
+	-O ../Metrics/SeqArtifact/fname.code \
+	--FILE_EXTENSION ".txt" \
+	-R /projects/sdas@colostate.edu/CanFamDatabases/DogGenome/Canis_familiaris.CanFam3.1.dna.fa
+
+
+#2_Collecting collectReadGroupChecksum
+gatk --java-options "-Xmx38g" CalculateReadGroupChecksum \
+	-I ../BAM/fname.code_recal_reads.bam \
+	-O ../Metrics/RGCheckSums/fname.code_RGCheckSums 
+
+
+#3_Alignment metrics
+java -jar ~/picard.jar CollectAlignmentSummaryMetrics \
+        R=/projects/sdas@colostate.edu/CanFamDatabases/DogGenome/Canis_familiaris.CanFam3.1.dna.fa \
+        I=../BAM/fname.code_recal_reads.bam \
+        O=../Metrics/alignAndinsert/fname.code_alignmentMetrics.txt
+
+
+#4_InsertSizeMetrics
+ java -jar ~/picard.jar CollectInsertSizeMetrics \
+        I=../BAM/fname.code_recal_reads.bam \
+        O=../Metrics/alignAndinsert/fname.code_insertSizeMetrics.txt \
+        H=../Metrics/alignAndinsert/fname.code_insertSizeHistogram.pdf \
+        M=0.5
+
+
+#5_Depth using gatk3.7 
+java -jar ~/GenomeAnalysisTK.jar \
+     -T DepthOfCoverage \
+     -R /projects/sdas@colostate.edu/CanFamDatabases/DogGenome/Canis_familiaris.CanFam3.1.dna.fa \
+     -I ../BAM/fname.code_recal_reads.bam \
+     -L /projects/sdas@colostate.edu/CanFamDatabases/Dog_Exome_sortedNo-colnames.bed \
+     --outputFormat table \
+     -o ../Metrics/depth/fname.code \
+     -l DEBUG
+
+
+#6_Collecting oxoG metrics
+java -jar ~/picard.jar CollectOxoGMetrics \
+	I=../BAM/fname.code_recal_reads.bam \
+	O=../Metrics/OxoG/fname.code_oxoG_metrics.txt \
+	R=/projects/sdas@colostate.edu/CanFamDatabases/DogGenome/Canis_familiaris.CanFam3.1.dna.fa
+
+
+#7_flagstat
+
+samtools flagstat ../BAM/fname.code_recal_reads.bam > ../Metrics/flagstat/fname.code_flagstat.out
+
+
+#8_Validate BAM file -gatk
+gatk ValidateSamFile \
+	-I ../BAM/fname.code_recal_reads.bam \
+	--CREATE_MD5_FILE true \
+	--TMP_DIR ../Metrics/ValidateBAM/fname.code.temp \
+	-O ../Metrics/ValidateBAM/fname.code_ValBAM_gatk
+
+
+#9_Collecting Base distribution
+
+java -jar ~/picard.jar CollectBaseDistributionByCycle \
+	CHART=../Metrics/BaseDist/fname.code_base_dist_by_cycle.pdf \
+	ALIGNED_READS_ONLY=true \
+	I=../BAM/fname.code_recal_reads.bam \
+	O=../Metrics/BaseDist/fname.code_CollectBaseDistributionByCycle.txt
+
+	
+
+
+
+
+
