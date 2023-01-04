@@ -11,7 +11,7 @@ module load jdk
 
 #Running Fastqc and Trimming on raw fastq files.
 
-~/fastqc -o ../RawFastq/fname.code*.gz
+~/fastqc -o ../RawfastQC/ ../RawFastq/fname.code*.gz
 
 #Trimming low quality reads and adapters
 java -jar -Xmx48G ~/trimmomatic-0.36.jar PE -phred33 \
