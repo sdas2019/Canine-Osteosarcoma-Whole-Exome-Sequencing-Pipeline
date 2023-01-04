@@ -1,4 +1,6 @@
 ## NOTE: change the line below if you have installed the Matlab MCR in an alternative location
+## This code was adapted from https://github.com/sbamin/canine_gistic2
+
 MCR_ROOT=`pwd`/MATLAB_Compiler_Runtime
 MCR_VER=v80
 
